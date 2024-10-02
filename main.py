@@ -406,7 +406,38 @@ def select_new_file():
 
 # Klasör ekler.
 def select_new_folder():
-    pass
+    if shuffle_item.mode == 2:
+        if len(treeview.selection()) == 0 or len(treeview.selection()) > 1:
+            messagebox.showwarning("Warning", "Select one directory.")
+        else:
+            parent = treeview.selection()[0]
+            parent_node = next((node for node in shuffle_item.nodes if node.node_id == int(parent)), None)
+            if parent_node.is_folder:
+                folder_name = simpledialog.askstring("Folder Name", "Type folder name")
+                path = os.path.join(parent_node.path, folder_name)
+                node = Node(shuffle_item.nodes[-1].node_id + 1, int(parent), True, folder_name, path)
+                treeview.insert(parent, "end", iid=node.node_id, text=f" {node.name}", open=True, image=photo_dir)
+                treeview.update_idletasks()
+                shuffle_item.nodes.append(node)
+
+                name = node.name.encode("utf-8")
+                if len(name) < 256:
+                    name += b'\x00' * (256 - len(name))
+                elif len(name) > 256:
+                    name = name[:256]
+                node_id = struct.pack('Q', node.node_id)
+                parent_id = struct.pack('Q', node.parent_id)
+                is_folder = 1 if node.is_folder else 0
+                is_folder = struct.pack('B', is_folder)
+                data = name + node_id + parent_id + is_folder
+                shuffle_data.nodes.append(data)
+
+                write_updated()
+                messagebox.showinfo("Info", "New folder added.")
+            else:
+                messagebox.showwarning("Warning", "Select one directory not file.")
+    else:
+        messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
 def select_rename():
     pass
