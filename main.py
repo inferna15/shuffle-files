@@ -1,4 +1,4 @@
-from tkinter import filedialog, ttk, font, messagebox
+from tkinter import filedialog, ttk, font, messagebox, simpledialog
 from PIL import Image, ImageTk
 import tkinter as tk
 import os
@@ -186,7 +186,7 @@ def select_root_folder():
     folder_path = filedialog.askdirectory()
     if folder_path:
         shuffle_item.mode = 1
-        treeview.heading("#0", text=folder_path)
+        treeview.heading("#0", text=f"Directory Format | {folder_path}")
         shuffle_item.reset()
         shuffle_data.reset()
         clear_treeview()
@@ -248,7 +248,7 @@ def select_shuffle_file():
     file_path = filedialog.askopenfilename()
     if file_path:
         shuffle_item.mode = 2
-        treeview.heading("#0", text=file_path)
+        treeview.heading("#0", text=f"Shuffle File Format | {file_path}")
         shuffle_item.reset()
         shuffle_data.reset()
         clear_treeview()
@@ -308,6 +308,7 @@ def run_shuffle_item_to_directory():
 
 # Operations -----------------------------------------------------------------------------------------------------------
 
+# Değişiklikleri yazdırır.
 def write_updated():
     shuffle_data.node_number = struct.pack('Q', len(shuffle_data.nodes))
     shuffle_data.content_number = struct.pack('Q', len(shuffle_data.contents))
@@ -336,6 +337,7 @@ def delete_recursive(item, deleted_items):
             deleted_items.add(item)
             shuffle_item.nodes = [node for node in shuffle_item.nodes if node.node_id != int(item)]
 
+# Silme işlemini gerçekleştir.
 def select_delete():
     if shuffle_item.mode == 2:
         if messagebox.askokcancel("Question", "Are you sure?"):
@@ -365,11 +367,44 @@ def select_delete():
             else:
                 messagebox.showinfo("Info", "Shuffle File deleted.")
     else:
-        messagebox.showwarning("Warning","Do this in file explorer. No need to do it here.")
+        messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
+# Dosya ekler.
 def select_new_file():
-    pass
+    if shuffle_item.mode == 2:
+        if len(treeview.selection()) == 0 or len(treeview.selection()) > 1:
+            messagebox.showwarning("Warning", "Select one directory.")
+        else:
+            parent = treeview.selection()[0]
+            parent_node = next((node for node in shuffle_item.nodes if node.node_id == int(parent)), None)
+            if parent_node.is_folder:
+                file_name = simpledialog.askstring("File Name", "Type file name")
+                path = os.path.join(parent_node.path, file_name)
+                node = Node(shuffle_item.nodes[-1].node_id + 1, int(parent), False, file_name, path)
+                treeview.insert(parent, "end", iid=node.node_id, text=f" {node.name}", image=photo_file)
+                treeview.update_idletasks()
+                shuffle_item.nodes.append(node)
 
+                name = node.name.encode("utf-8")
+                if len(name) < 256:
+                    name += b'\x00' * (256 - len(name))
+                elif len(name) > 256:
+                    name = name[:256]
+                node_id = struct.pack('Q', node.node_id)
+                parent_id = struct.pack('Q', node.parent_id)
+                is_folder = 1 if node.is_folder else 0
+                is_folder = struct.pack('B', is_folder)
+                data = name + node_id + parent_id + is_folder
+                shuffle_data.nodes.append(data)
+
+                write_updated()
+                messagebox.showinfo("Info", "New file added.")
+            else:
+                messagebox.showwarning("Warning", "Select one directory not file.")
+    else:
+        messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
+
+# Klasör ekler.
 def select_new_folder():
     pass
 
