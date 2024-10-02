@@ -25,6 +25,7 @@ class Content:
 
 class ShuffleItem:
     def __init__(self, root_node_name="", content_size=1024):
+        self.current_file_path = ""
         self.root_node_name = root_node_name
         self.mode = 0
         self.content_size = content_size
@@ -32,6 +33,7 @@ class ShuffleItem:
         self.treeview_nodes = []
 
     def reset(self):
+        self.current_file_path = ""
         self.root_node_name = ""
         self.nodes.clear()
         self.treeview_nodes.clear()
@@ -70,6 +72,16 @@ def clear_treeview():
     for item in treeview.get_children():
         treeview.delete(item)
 
+def print_treeview():
+    print_treeview_nodes("", treeview)
+
+def print_treeview_nodes(parent, treeview):
+    children = treeview.get_children(parent)
+    for child in children:
+        #print(treeview.item(child, "text"))
+        print(child)
+        print_treeview_nodes(child, treeview)
+
 # Directory to Shuffle File --------------------------------------------------------------------------------------------
 
 # Dosyayı gezerken ilk Node oluştur sonra o Node'u treeview'e ekle
@@ -79,12 +91,12 @@ def change_treeview_mode_1(parent, directory):
         if os.path.isdir(fullpath):
             node = Node(len(shuffle_item.nodes) + 1, directory.node_id, True, item, fullpath)
             shuffle_item.nodes.append(node)
-            tree_node = treeview.insert(parent, "end", text=f" {item}", open=False, image=photo_dir)
+            tree_node = treeview.insert(parent, "end", iid=node.node_id, text=f" {item}", open=False, image=photo_dir)
             change_treeview_mode_1(tree_node, node)
         else:
             node = Node(len(shuffle_item.nodes) + 1, directory.node_id, False, item, fullpath)
             shuffle_item.nodes.append(node)
-            treeview.insert(parent, "end", text=f" {item}", image=photo_file)
+            treeview.insert(parent, "end", iid=node.node_id, text=f" {item}", image=photo_file)
 
 # is_folder' False olan Node'ların içeriklerini oku ve Node'un listesine ekle
 def read_content_for_mode_1():
@@ -151,7 +163,7 @@ def write_into_shuffle_file():
     if len(shuffle_item.nodes):
         path, tail = os.path.split(shuffle_item.nodes[0].path)
         file_path = os.path.join(path, f"Shuffle-File-{shuffle_item.root_node_name}")
-        with open(file_path, 'ab') as file:
+        with open(file_path, 'wb') as file:
             file.write(shuffle_data.root_folder_name)
             file.write(shuffle_data.node_number)
             for node in shuffle_data.nodes:
@@ -221,13 +233,14 @@ def data_to_item_for_nodes():
 def create_treeview_from_nodes():
     for node in shuffle_item.nodes:
         if node.node_id == 1:
-            node_tree = treeview.insert("", "end", text=f" {node.name}", open=True, image=photo_dir)
+            node_tree = treeview.insert("",
+                                        "end", iid=node.node_id, text=f" {node.name}", open=True, image=photo_dir)
         elif node.is_folder:
-            node_tree = treeview.insert(shuffle_item.treeview_nodes[node.parent_id - 1],
-                                        "end", text=f" {node.name}", open=False, image=photo_dir)
+            node_tree = treeview.insert(str(node.parent_id),
+                                        "end", iid=node.node_id, text=f" {node.name}", open=False, image=photo_dir)
         else:
-            node_tree = treeview.insert(shuffle_item.treeview_nodes[node.parent_id - 1],
-                                        "end", text=f" {node.name}", image=photo_file)
+            node_tree = treeview.insert(str(node.parent_id),
+                                        "end", iid=node.node_id, text=f" {node.name}", image=photo_file)
         shuffle_item.treeview_nodes.append(node_tree)
 
 # Shuffle File to Directory işlemi için ön hazırlık yap
@@ -240,6 +253,7 @@ def select_shuffle_file():
         shuffle_data.reset()
         clear_treeview()
         # Fill treeview
+        shuffle_item.current_file_path = file_path
         read_shuffle_file(file_path)
         data_to_item_for_nodes()
         create_treeview_from_nodes()
@@ -254,7 +268,8 @@ def create_paths(file_path):
         if node.node_id == 1:
             node.path = os.path.join(root, node.name + "-unshuffled")
         else:
-            node.path = os.path.join(shuffle_item.nodes[node.parent_id - 1].path, node.name)
+            parent = next((obj for obj in shuffle_item.nodes if obj.node_id == node.parent_id), None)
+            node.path = os.path.join(parent.path, node.name)
 
 # Content'leri oku ve Node'larına geçir.
 def carry_contents_to_node():
@@ -264,7 +279,8 @@ def carry_contents_to_node():
         content = item[17:]
         is_end = True if data[2] == 1 else False
         content_item = Content(data[1], content, is_end)
-        shuffle_item.nodes[data[0] - 1].content.append(content_item)
+        node = next((obj for obj in shuffle_item.nodes if obj.node_id == data[0]), None)
+        node.content.append(content_item)
 
 # Content'leri sırala
 def sort_contents():
@@ -277,7 +293,7 @@ def create_file_system():
         if node.is_folder:
             os.mkdir(node.path)
         else:
-            with open(node.path, 'ab') as file:
+            with open(node.path, 'wb') as file:
                 for content in node.content:
                     if content.is_end:
                         content.content = content.content.rstrip(b'\x00')
@@ -291,8 +307,65 @@ def run_shuffle_item_to_directory():
     messagebox.showinfo("Complete", "Mission Completed.")
 
 # Operations -----------------------------------------------------------------------------------------------------------
+
+def write_updated():
+    shuffle_data.node_number = struct.pack('Q', len(shuffle_data.nodes))
+    shuffle_data.content_number = struct.pack('Q', len(shuffle_data.contents))
+    with open(shuffle_item.current_file_path, 'wb') as file:
+        file.write(shuffle_data.root_folder_name)
+        file.write(shuffle_data.node_number)
+        for node in shuffle_data.nodes:
+            file.write(node)
+        file.write(shuffle_data.content_number)
+        file.write(shuffle_data.content_size)
+        for content in shuffle_data.contents:
+            file.write(content)
+
+# Treeview ve node'ları siler.
+def delete_recursive(item, deleted_items):
+    if item not in deleted_items:
+        if not treeview.get_children(item):
+            treeview.delete(item)
+            deleted_items.add(item)
+            shuffle_item.nodes = [node for node in shuffle_item.nodes if node.node_id != int(item)]
+            return
+        else:
+            for node in treeview.get_children(item):
+                delete_recursive(node, deleted_items)
+            treeview.delete(item)
+            deleted_items.add(item)
+            shuffle_item.nodes = [node for node in shuffle_item.nodes if node.node_id != int(item)]
+
 def select_delete():
-    pass
+    if shuffle_item.mode == 2:
+        if messagebox.askokcancel("Question", "Are you sure?"):
+            flag = True
+            deleted_items = set()
+            for item in treeview.selection():
+                if int(item) == 1:
+                    head, tail = os.path.split(shuffle_item.nodes[0].path)
+                    path = os.path.join(head, f"Shuffle-File-{shuffle_item.root_node_name}")
+                    os.remove(path)
+                    treeview.heading("#0", text="")
+                    clear_treeview()
+                    shuffle_item.mode = 0
+                    flag = False
+                    break
+                else:
+                    delete_recursive(item, deleted_items)
+            if flag:
+                treeview.update_idletasks()
+                shuffle_data.nodes = [node for node in shuffle_data.nodes if
+                                      str(struct.unpack('Q', node[256:264])[0]) not in deleted_items]
+                shuffle_data.contents = [content for content in shuffle_data.contents if
+                                         str(struct.unpack('Q', content[:8])[0]) not in deleted_items]
+                write_updated()
+
+                messagebox.showinfo("Info", "Selected file(s) deleted.")
+            else:
+                messagebox.showinfo("Info", "Shuffle File deleted.")
+    else:
+        messagebox.showwarning("Warning","Do this in file explorer. No need to do it here.")
 
 def select_new_file():
     pass
@@ -366,6 +439,7 @@ operation_menu.add_command(label="Replace", command=select_replace)
 test_menu = tk.Menu(menu_bar, tearoff=0, font=custom_font)
 test_menu.add_command(label="Print Nodes", command=shuffle_item.print_nodes)
 test_menu.add_command(label="Print Shuffle Info", command=lambda: print(shuffle_item))
+test_menu.add_command(label="Print Treeview Item", command=print_treeview)
 
 menu_bar.add_cascade(label="Commands", menu=file_menu)
 menu_bar.add_cascade(label="Run", menu=run_menu)
