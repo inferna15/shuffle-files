@@ -497,9 +497,31 @@ def select_rename():
     else:
         messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
+# Dosyaların içeriğini değiştirebilir.
 def select_edit():
+    def cancel():
+        edit_window.destroy()
+
     def save_changes():
-        pass
+        conts = [content for content in shuffle_data.contents if struct.unpack('Q', content[:8])[0] != int(selected)]
+        shuffle_data.contents.clear()
+        shuffle_data.contents = conts
+        text_data = text_area.get("1.0", "end-1c").encode('utf-8')
+
+        sequence_no = 0
+        for i in range(0, len(text_data), shuffle_item.content_size):
+            content = text_data[i:i + shuffle_item.content_size]
+            is_end = 0
+            if i + shuffle_item.content_size > len(text_data):
+                is_end = 1
+                content = content + b'\x00' * (shuffle_item.content_size - (len(text_data) - i))
+            sequence_no += 1
+            data = (struct.pack('Q', int(selected)) + struct.pack('Q', sequence_no)
+                    + struct.pack('B', is_end) + content)
+            shuffle_data.contents.append(data)
+        random.shuffle(shuffle_data.contents)
+        write_updated()
+        edit_window.destroy()
 
     if shuffle_item.mode == 2:
         if len(treeview.selection()) == 0 or len(treeview.selection()) > 1:
@@ -522,7 +544,7 @@ def select_edit():
 
                 edit_menu = tk.Menu(edit_bar, tearoff=0, font=custom_font)
                 edit_menu.add_command(label="Save the changes", command=save_changes)
-                edit_menu.add_command(label="Cancel", command=edit_window.destroy)
+                edit_menu.add_command(label="Cancel", command=cancel)
                 edit_bar.add_cascade(label="Options", menu=edit_menu)
 
                 text_area = tk.Text(edit_window, wrap=tk.WORD, font=custom_font)
@@ -536,7 +558,10 @@ def select_edit():
                 contents = [content for content in shuffle_data.contents if struct.unpack('Q', content[:8])[0] == int(selected)]
                 contents.sort(key=lambda x: struct.unpack('Q', x[8:16])[0])
                 for content in contents:
-                    text_area.insert(tk.END, content[17:])
+                    if struct.unpack('B', content[16:17])[0] == 1:
+                        text_area.insert(tk.END, content[17:].rstrip(b'\x00'))
+                    else:
+                        text_area.insert(tk.END, content[17:])
     else:
         messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
