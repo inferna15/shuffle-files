@@ -1,4 +1,4 @@
-from tkinter import filedialog, ttk, font, messagebox, simpledialog
+from tkinter import filedialog, ttk, font, messagebox, simpledialog, Toplevel
 from PIL import Image, ImageTk
 import tkinter as tk
 import os
@@ -73,13 +73,13 @@ def clear_treeview():
         treeview.delete(item)
 
 def print_treeview():
-    print_treeview_nodes("", treeview)
+    print_treeview_nodes("")
 
-def print_treeview_nodes(parent, treeview):
+def print_treeview_nodes(parent):
     children = treeview.get_children(parent)
     for child in children:
         print(child)
-        print_treeview_nodes(child, treeview)
+        print_treeview_nodes(child)
 
 # Directory to Shuffle File --------------------------------------------------------------------------------------------
 
@@ -459,6 +459,9 @@ def select_rename():
             messagebox.showwarning("Warning", "Select one directory of file.")
         else:
             selected = treeview.selection()[0]
+            if int(selected) == 1:
+                messagebox.showerror("Error", "The root file name cannot be changed.")
+                return
             parent = treeview.parent(selected)
             node = next((node for node in shuffle_item.nodes if node.node_id == int(selected)), None)
             rename = simpledialog.askstring("Rename", "Type new name")
@@ -474,8 +477,10 @@ def select_rename():
             node.path = os.path.join(head, rename)
             treeview.item(selected, text=f" {rename}")
             treeview.update_idletasks()
-            item = next((item for item in shuffle_data.nodes if str(struct.unpack('Q', item[256:264])[0] == int(selected))), None)
+            item = next((item for item in shuffle_data.nodes if struct.unpack('Q', item[256:264])[0] == int(selected)), None)
+            print(item)
             index = shuffle_data.nodes.index(item)
+
 
             name = node.name.encode("utf-8")
             if len(name) < 256:
@@ -493,7 +498,47 @@ def select_rename():
         messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
 def select_edit():
-    pass
+    def save_changes():
+        pass
+
+    if shuffle_item.mode == 2:
+        if len(treeview.selection()) == 0 or len(treeview.selection()) > 1:
+            messagebox.showwarning("Warning", "Select one file.")
+        else:
+            selected = treeview.selection()[0]
+            node = next((node for node in shuffle_item.nodes if node.node_id == int(selected)), None)
+            if node.is_folder:
+                messagebox.showerror("Error", "Select one file.")
+            else:
+                edit_window = Toplevel(app)
+                edit_window.title("edit")
+                edit_window.geometry(f"1000x500+{app.winfo_x()}+{app.winfo_y()}")
+                edit_window.protocol("WM_DELETE_WINDOW", lambda : messagebox.showwarning("Warning", "Please make your edit on options menu."))
+                edit_window.resizable(False, False)
+                edit_window.grab_set()
+
+                edit_bar = tk.Menu(edit_window)
+                edit_window.config(menu=edit_bar)
+
+                edit_menu = tk.Menu(edit_bar, tearoff=0, font=custom_font)
+                edit_menu.add_command(label="Save the changes", command=save_changes)
+                edit_menu.add_command(label="Cancel", command=edit_window.destroy)
+                edit_bar.add_cascade(label="Options", menu=edit_menu)
+
+                text_area = tk.Text(edit_window, wrap=tk.WORD, font=custom_font)
+                text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+                text_scroll = tk.Scrollbar(edit_window, orient=tk.VERTICAL, command=text_area.yview)
+                text_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+                text_area.configure(yscrollcommand=text_scroll.set)
+
+                contents = [content for content in shuffle_data.contents if struct.unpack('Q', content[:8])[0] == int(selected)]
+                contents.sort(key=lambda x: struct.unpack('Q', x[8:16])[0])
+                for content in contents:
+                    text_area.insert(tk.END, content[17:])
+    else:
+        messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
 def select_replace():
     pass
@@ -569,6 +614,11 @@ main_frame.pack()
 
 # Treeview
 treeview = ttk.Treeview(main_frame)
-treeview.pack(fill="both", expand=True)
+treeview.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+tree_scroll = tk.Scrollbar(main_frame, orient=tk.VERTICAL, command=treeview.yview)
+tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+treeview.configure(yscrollcommand=tree_scroll.set)
 
 app.mainloop()
