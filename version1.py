@@ -1,10 +1,24 @@
-from cProfile import label
+# Version 1
 from tkinter import filedialog, ttk, font, messagebox, simpledialog, Toplevel
 from PIL import Image, ImageTk
 import tkinter as tk
 import os
 import struct
 import random
+
+"""
+Yeni bir yapıya ihtiyacım var
+bu yapıda nodelar contentlerin ilk node'nu tutacak
+contentlerde kendisinden sonkrakini gösterir.
+sonuncu content none gösterir. 
+
+değişiklikler tespit edilip sadece o değişiklik kısmı etkilenecek
+kapasite değişkeniyle zırt pırt değişiklik olmasın diye tampon alanlar olacak.
+
+gerekirse dosyanın boyutu büyük olsun önemli olan hızlı çalışması
+
+versiyon 1 tamamlandı 2'ye geçiliyor
+"""
 
 class Node:
     def __init__(self, node_id, parent_id, is_folder, name, path):
@@ -16,7 +30,13 @@ class Node:
         self.content = []
 
     def __str__(self):
-        return f"Id: {self.node_id}, Parent Id: {self.parent_id}, is Folder: {self.is_folder}, Name: {self.name}, Path: {self.path}"
+        return f"""
+        ----------------------------------------------
+        Id: {self.node_id}, 
+        Parent Id: {self.parent_id}, 
+        is Folder: {self.is_folder}, 
+        Name: {self.name}, 
+        Path: {self.path}"""
 
 class Content:
     def __init__(self, sequence_no, content, is_end):
@@ -574,13 +594,7 @@ def select_edit():
         messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
 #-----------------------------------------------------------------------------------------------------------------------
-def run_app():
-    if shuffle_item.mode == 1:
-        run_directory_to_shuffle_item()
-    elif shuffle_item.mode == 2:
-        run_shuffle_item_to_directory()
-    else:
-        messagebox.showwarning("Warning", "Please open a directory or a shuffle file")
+
 
 # App
 app = tk.Tk()
