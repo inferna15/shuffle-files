@@ -1,3 +1,4 @@
+from cProfile import label
 from tkinter import filedialog, ttk, font, messagebox, simpledialog, Toplevel
 from PIL import Image, ImageTk
 import tkinter as tk
@@ -187,6 +188,7 @@ def select_root_folder():
     folder_path = filedialog.askdirectory()
     if folder_path:
         shuffle_item.mode = 1
+        file_menu.entryconfig(0, label="Convert to Shuffle File")
         treeview.heading("#0", text=f"Directory Format | {folder_path}")
         shuffle_item.reset()
         shuffle_data.reset()
@@ -249,6 +251,7 @@ def select_shuffle_file():
     file_path = filedialog.askopenfilename()
     if file_path:
         shuffle_item.mode = 2
+        file_menu.entryconfig(0, label="Convert to Directory")
         treeview.heading("#0", text=f"Shuffle File Format | {file_path}")
         shuffle_item.reset()
         shuffle_data.reset()
@@ -577,7 +580,7 @@ def run_app():
     elif shuffle_item.mode == 2:
         run_shuffle_item_to_directory()
     else:
-        print("Mod seçilmedi.")
+        messagebox.showwarning("Warning", "Please open a directory or a shuffle file")
 
 # App
 app = tk.Tk()
@@ -590,47 +593,69 @@ style = ttk.Style(app)
 style.theme_use("clam")
 
 tree_style = ttk.Style()
-tree_style.configure("Treeview", font=("Cascadia Code", 8))
-tree_style.configure("Treeview.Heading", font=("Cascadia Code", 8))
+tree_style.configure("Treeview", font=("Cascadia Code", 9))
+tree_style.configure("Treeview.Heading", font=("Cascadia Code", 9))
 
 # Font
 custom_font = font.Font(family="Cascadia Code", size=10)
 
-# Images
-image_dir = Image.open("assets/directory.png")
-image_dir = image_dir.resize((15, 15))  # Resize the image
-photo_dir = ImageTk.PhotoImage(image_dir)  # Create PhotoImage after resizing
+# Photo
+icon_size = (20, 20)
 
-image_file = Image.open("assets/file.png")
-image_file = image_file.resize((15, 15))  # Resize the image
-photo_file = ImageTk.PhotoImage(image_file)  # Create PhotoImage after resizing
+def create_icon(image_path):
+    image = Image.open(image_path)
+    image = image.resize(icon_size)
+    return ImageTk.PhotoImage(image)
+
+icons = {
+    'file': "assets/file.png",
+    'directory': "assets/directory.png",
+    'delete': "assets/delete.png",
+    'edit': "assets/edit.png",
+    'export': "assets/export.png",
+    'import': "assets/import.png",
+    'new_file': "assets/new_file.png",
+    'new_folder': "assets/new_folder.png",
+    'rename': "assets/rename.png",
+    'run': "assets/run.png",
+    'test': "assets/test.png"
+}
+
+photo_file = create_icon(icons['file'])
+photo_dir = create_icon(icons['directory'])
+photo_delete = create_icon(icons['delete'])
+photo_edit = create_icon(icons['edit'])
+photo_export = create_icon(icons['export'])
+photo_import = create_icon(icons['import'])
+photo_new_file = create_icon(icons['new_file'])
+photo_new_folder = create_icon(icons['new_folder'])
+photo_rename = create_icon(icons['rename'])
+photo_run = create_icon(icons['run'])
+photo_test = create_icon(icons['test'])
 
 # Menu
 menu_bar = tk.Menu(app)
 app.config(menu=menu_bar)
 
 file_menu = tk.Menu(menu_bar, tearoff=0, font=custom_font)
-file_menu.add_command(label="Directory to Shuffle Item", command=select_root_folder)
-file_menu.add_command(label="Shuffle Item to Directory", command=select_shuffle_file)
-
-run_menu = tk.Menu(menu_bar, tearoff=0, font=custom_font)
-run_menu.add_command(label="Run", command=run_app)
+file_menu.add_command(label="Convert", command=run_app, image=photo_run, compound=tk.LEFT)
+file_menu.add_command(label="Open Shuffle Item", command=select_shuffle_file, image=photo_import, compound=tk.LEFT)
+file_menu.add_command(label="Open Directory", command=select_root_folder, image=photo_export, compound=tk.LEFT)
 
 operation_menu = tk.Menu(menu_bar, tearoff=0, font=custom_font)
-operation_menu.add_command(label="Delete", command=select_delete)
-operation_menu.add_command(label="New File", command=select_new_file)
-operation_menu.add_command(label="New Folder", command=select_new_folder)
-operation_menu.add_command(label="Rename", command=select_rename)
-operation_menu.add_command(label="Edit", command=select_edit)
-operation_menu.add_command(label="Replace", command=select_replace)
+operation_menu.add_command(label="New File", command=select_new_file, image=photo_new_file, compound=tk.LEFT)
+operation_menu.add_command(label="New Folder", command=select_new_folder, image=photo_new_folder, compound=tk.LEFT)
+operation_menu.add_command(label="Edit", command=select_edit, image=photo_edit, compound=tk.LEFT)
+operation_menu.add_command(label="Delete", command=select_delete, image=photo_delete, compound=tk.LEFT)
+operation_menu.add_command(label="Rename", command=select_rename, image=photo_rename, compound=tk.LEFT)
+
 
 test_menu = tk.Menu(menu_bar, tearoff=0, font=custom_font)
-test_menu.add_command(label="Print Nodes", command=shuffle_item.print_nodes)
-test_menu.add_command(label="Print Shuffle Info", command=lambda: print(shuffle_item))
-test_menu.add_command(label="Print Treeview Item", command=print_treeview)
+test_menu.add_command(label="Print Nodes", command=shuffle_item.print_nodes, image=photo_test, compound=tk.LEFT)
+test_menu.add_command(label="Print Shuffle Info", command=lambda: print(shuffle_item), image=photo_test, compound=tk.LEFT)
+test_menu.add_command(label="Print Treeview Item", command=print_treeview, image=photo_test, compound=tk.LEFT)
 
 menu_bar.add_cascade(label="Commands", menu=file_menu)
-menu_bar.add_cascade(label="Run", menu=run_menu)
 menu_bar.add_cascade(label="Operations", menu=operation_menu)
 menu_bar.add_cascade(label="Tests", menu=test_menu)
 
