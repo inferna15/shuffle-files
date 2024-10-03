@@ -31,8 +31,10 @@ class ShuffleItem:
         self.content_size = content_size
         self.nodes = []
         self.treeview_nodes = []
+        self.last_id = 0
 
     def reset(self):
+        self.last_id = 0
         self.current_file_path = ""
         self.root_node_name = ""
         self.nodes.clear()
@@ -257,6 +259,7 @@ def select_shuffle_file():
         data_to_item_for_nodes()
         create_treeview_from_nodes()
         create_paths(file_path)
+        shuffle_item.last_id = len(shuffle_item.nodes)
     else:
         shuffle_item.mode = 0
 
@@ -386,7 +389,8 @@ def select_new_file():
                         messagebox.showerror("Error", "There cannot be two files with the same name.")
                         return
                 path = os.path.join(parent_node.path, file_name)
-                node = Node(shuffle_item.nodes[-1].node_id + 1, int(parent), False, file_name, path)
+                shuffle_item.last_id += 1
+                node = Node(shuffle_item.last_id, int(parent), False, file_name, path)
                 treeview.insert(parent, "end", iid=node.node_id, text=f" {node.name}", image=photo_file)
                 treeview.update_idletasks()
                 shuffle_item.nodes.append(node)
@@ -428,7 +432,8 @@ def select_new_folder():
                         messagebox.showerror("Error", "There cannot be two folders with the same name.")
                         return
                 path = os.path.join(parent_node.path, folder_name)
-                node = Node(shuffle_item.nodes[-1].node_id + 1, int(parent), True, folder_name, path)
+                shuffle_item.last_id += 1
+                node = Node(shuffle_item.last_id, int(parent), True, folder_name, path)
                 treeview.insert(parent, "end", iid=node.node_id, text=f" {node.name}", open=True, image=photo_dir)
                 treeview.update_idletasks()
                 shuffle_item.nodes.append(node)
@@ -564,9 +569,6 @@ def select_edit():
                         text_area.insert(tk.END, content[17:])
     else:
         messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
-
-def select_replace():
-    pass
 
 #-----------------------------------------------------------------------------------------------------------------------
 def run_app():
