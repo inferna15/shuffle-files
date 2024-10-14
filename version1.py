@@ -6,20 +6,6 @@ import os
 import struct
 import random
 
-"""
-Yeni bir yapıya ihtiyacım var
-bu yapıda nodelar contentlerin ilk node'nu tutacak
-contentlerde kendisinden sonkrakini gösterir.
-sonuncu content none gösterir. 
-
-değişiklikler tespit edilip sadece o değişiklik kısmı etkilenecek
-kapasite değişkeniyle zırt pırt değişiklik olmasın diye tampon alanlar olacak.
-
-gerekirse dosyanın boyutu büyük olsun önemli olan hızlı çalışması
-
-versiyon 1 tamamlandı 2'ye geçiliyor
-"""
-
 class Node:
     def __init__(self, node_id, parent_id, is_folder, name, path):
         self.node_id = node_id
@@ -594,7 +580,13 @@ def select_edit():
         messagebox.showwarning("Warning", "Do this in file explorer. No need to do it here.")
 
 #-----------------------------------------------------------------------------------------------------------------------
-
+def run_app():
+    if shuffle_item.mode == 1:
+        run_directory_to_shuffle_item()
+    elif shuffle_item.mode == 2:
+        run_shuffle_item_to_directory()
+    else:
+        messagebox.showerror("", "boom")
 
 # App
 app = tk.Tk()
