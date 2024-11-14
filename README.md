@@ -1,9 +1,12 @@
 # Shuffle-Files
 Bu arayüzün amacı seçilen bir dosyayı kök dosya olarak düşünüp altındakilerler beraber olacak şekilde bir baniry olarak dosya sistemi oluşturmak. 
 <br>
+<br>
 Bu dosya sistmeinin olayı ise dosya sistemleri şifrelense bile dosya içerikleri belleğe doğrusal olarak yazıldığından dolayı yinede belli bir kısmına bakarak diğer bir kısmı tahmin edilebiliyor bu yüzden sadece şifreleme yeterince iyi bir çözüm değil. 
 <br>
+<br>
 Bu binary dosya sisteminde ise dosya içerikleri belli boyuttaki parçalara ayrılıp karıştırlmış şekilde yazılıyor. Daha sonra şifreleniyor.
+<br>
 <br>
 Ama ben bu uygulama için daha şifreleme kısmını yazmadım çünkü bellek kullanımı çok fazla daha az bellek kullanan bir uygulama için bunu olduğu şekilde bırakıyorum. Yine de dosya sistemi doğru şekilde çalışıyor.
 ## Görüntüler
