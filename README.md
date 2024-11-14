@@ -1,5 +1,5 @@
 # Shuffle-Files
-Bu arayüzün amacı seçilen bir dosyayı kök dosya olarak düşünüp altındakilerler beraber olacak şekilde bir baniry olarak dosya sistemi oluşturmak. 
+Bu arayüzün amacı seçilen bir dosyayı kök dosya olarak düşünüp altındakilerler beraber olacak şekilde bir binary olarak dosya sistemi oluşturmak. 
 <br>
 <br>
 Bu dosya sistmeinin olayı ise dosya sistemleri şifrelense bile dosya içerikleri belleğe doğrusal olarak yazıldığından dolayı yinede belli bir kısmına bakarak diğer bir kısmı tahmin edilebiliyor bu yüzden sadece şifreleme yeterince iyi bir çözüm değil. 
