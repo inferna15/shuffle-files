@@ -9,6 +9,8 @@ Bu binary dosya sisteminde ise dosya içerikleri belli boyuttaki parçalara ayr�
 <br>
 <br>
 Ama ben bu uygulama için daha şifreleme kısmını yazmadım çünkü bellek kullanımı çok fazla daha az bellek kullanan bir uygulama için bunu olduğu şekilde bırakıyorum. Yine de dosya sistemi doğru şekilde çalışıyor.
+<br>
+<a href="https://github.com/inferna15/file-system">Optimize edilmiş hali</a>
 ## Görüntüler
 ![image](https://github.com/user-attachments/assets/e67d39b2-d665-415c-88f1-c25e4ea818ce)
 ![image](https://github.com/user-attachments/assets/c1092d64-a81e-4c22-88e4-e35f1fcf2f08)
